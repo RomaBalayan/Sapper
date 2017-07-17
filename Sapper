@@ -1,0 +1,224 @@
+#include <iostream>
+#include <string>
+#include <cstdlib>
+#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+using namespace std;
+int BombSearching(char** underField, int y,int x,int width)
+{
+    int bombs=0;
+    for(int _Y=y-1; _Y<=y+1; _Y++)
+    {
+        if(_Y<0 || _Y>=width) continue;
+        for(int _X=x-1;_X<=x+1;_X++)
+        {
+            if((_X<0) || (_X>=width)) continue;
+            if(underField[_Y][_X]=='O') bombs++;
+
+        }
+    }
+    return bombs;
+}
+int Count=0;
+int tempcheck=0;
+
+
+
+void OpenEmpty(char** Field, char** UnderField, int y, int x,int width, bool**FieldCheck)
+{
+     if(FieldCheck[y][x]) return;  // Checking have program checked this cell already
+    FieldCheck[y][x] = true;
+    Field[y][x]=' ';
+    int Bomb;
+    cout<<"y= "<<y<<" x= "<<x<<endl;
+    for(int _Y=y-1; _Y<=y+1; _Y++)
+    {
+        if(_Y<0 || _Y>=width)
+            {
+                continue;
+            }
+        for(int _X=x-1;_X<=x+1;_X++)
+        {
+            if((_X<0) || (_X>=width) || (_Y==y && _X==x))
+            {
+                continue;
+            }
+            Bomb=BombSearching(UnderField,_Y,_X,width);
+            if(Bomb==0)
+            {
+
+                        OpenEmpty(Field, UnderField, _Y, _X, width,FieldCheck);
+            }
+            else
+                Field[_Y][_X] = Bomb + '0';
+
+        }
+    }
+}
+int main()
+{
+int BombCount=0;
+int BombC=0;
+int width;
+bool check=true;
+bool flag=false;
+bool win=false;
+bool lose=false;
+srand(time(NULL));
+system("clear");
+int lvl;
+cout<<"Enter level of complexity: 1,2 or 3"<<endl;
+cin>>lvl;
+switch (lvl)
+{
+    case 1:
+        width=10;
+        break;
+    case 2:
+        width=15;
+        break;
+    case 3:
+        width=20;
+        break;
+    default:
+        cout<<"YOU LOST! i told enter 1,2 or 3"<<endl;
+        lose=true;
+        break;
+
+}
+
+
+int r;
+bool **fieldCheck = new bool*[width];   // Check for empty cells finding.
+char **field = new char*[width];    // Playing field
+char **underField = new char*[width];   //Field with bombs.
+for(int i=0; i<width; i++)
+{
+        field[i] = new char[width];
+        fieldCheck[i] = new bool[width];
+        underField[i] = new char[width];
+    for(int j=0; j<width; j++)
+    {
+        r = rand()%7;
+        fieldCheck[i][j]=false;
+        underField[i][j]=' ';
+        if(r == 0) {underField[i][j]='O';BombC++;}
+
+        field[i][j]='*';
+        cout<<field[i][j];
+    }
+    cout<<endl;
+
+}
+char action;
+int x=0;
+int y=0;
+int bombs=0;
+cout<<"Enter 'i' for help"<<endl;
+while(action!='q' && !win && !lose)
+{
+   for(int k=0; k<=y; k++)
+    {
+        for(int l=0;l<=x; l++)
+        {
+            if(field[k][l]=='.') field[k][l]='*';
+        }
+    }
+     cin>>action;
+
+    //I know that i could use switch here.
+    if((action == 'w') &&( y>0))
+    {
+        y--;
+    }
+    else if((action == 'w') && (y==0)) continue;
+    else if((action == 'd') && (x<width-1)) x++;
+    else if((action=='d') &&( x==width-1)) continue;
+    else if((action == 'a') &&( x>0)) x--;
+    else if((action == 'a') &&( x==0)) continue;
+    else if((action == 's' )&& (y<width-1)) y++;
+    else if((action=='s') && (y==width-1)) continue;
+    else if((action== 'e') &&( flag)) {field[y][x]='*';flag=false;}
+    else if((action=='e') && (!flag)) {field[y][x]='F';flag=true; }
+    else if(action=='r' )
+    {
+        if(underField[y][x]=='O')
+        {
+            cout<<"You lost"<<endl;
+            lose=true;
+
+        }
+        else if(underField[y][x]==' ')
+        {
+            bombs=BombSearching(underField , y , x,width);
+            if(bombs==0)
+{
+                field[y][x]=' ';
+                OpenEmpty(field,underField,y,x,width,fieldCheck);
+                for(int z=0;z<width;z++)
+                {
+                    for(int h=0; h<width;h++)
+                        fieldCheck[z][h]=false;
+                }
+            }
+            else
+            {
+                field[y][x] = bombs + '0';
+                bombs=0;
+            }
+        }
+        check = false;
+
+    }
+    else if(action=='k')
+    {
+        cout<<endl<<endl<<endl<<"BOMBS: "<<endl;
+        for(int i=0; i<width; i++)
+        {
+            for(int j=0; j<width; j++)
+            {
+                cout<<underField[i][j];
+            }
+            cout<<endl;
+        }
+        cout<<"y="<<y<<"  x="<<x<<endl;
+        cin>>action;
+    }
+    else if(action=='b')
+    {
+        for(int i=0;i<width;i++)
+        {
+            for(int j=0; j<width; j++)
+            {
+                if((field[i][j]=='F') && (underField[i][j]=='O')) BombCount++;
+            }
+        }
+        if(BombCount==BombC) win=true;
+        else cout<<"Oops..."<<endl;
+    }
+    else if(action=='i')
+    {
+        cout<<"R - open ; E - flag ; K - answer; B - finish game; Enter smth to continue"<<endl;
+        cin>>action;
+    }
+    if(check && field[y][x]=='*')
+    field[y][x]='.';
+    system("clear");
+    check=true;
+
+    for(int i=0; i<width;i++)
+    {
+        for(int j=0; j<width; j++)
+        cout<<field[i][j];
+    cout<<endl;
+    }
+bombs=0;
+}
+
+if(lose) cout<<"LOOSER";
+if(win) cout<<"Congratulations!!! You won!"<<endl;
+
+
+return 0;
+}
